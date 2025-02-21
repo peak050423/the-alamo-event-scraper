@@ -1,0 +1,53 @@
+{
+	"actorSpecification": 1,
+	"name": "linkedin-scraper",
+	"title": "LinkedIn Scraper",
+	"description": "Scrapers for LinkedIn, designed to efficiently gather data on company followers and post likers. By consolidating the scraping and enrichment processes, these scrapers aim to streamline data collection and reduce costs compared to existing methods.",
+	"version": "0.0",
+	"meta": {
+		"templateId": "python-start"
+	},
+	"input": "./input_schema.json",
+	"readme": "../README.md",
+	"dockerfile": "./Dockerfile",
+	"storages": {
+		"dataset": {
+			"actorSpecification": 1,
+			"title": "LinkedIn Scraper",
+			"views": {
+				"results": {
+					"title": "Scraped Results",
+					"transformation": {
+						"fields": [
+							"date",
+							"start_time",
+							"end_time",
+							"name"
+						]
+					},
+					"display": {
+						"component": "table",
+						"properties": {
+							"date": {
+								"label": "date",
+								"format": "string"
+							},
+							"start_time": {
+								"label": "start_time",
+								"format": "string"
+							},
+							"end_time": {
+								"label": "end_time",
+								"format": "string"
+							},
+							"name": {
+								"label": "name",
+								"format": "string"
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
