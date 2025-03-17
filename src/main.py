@@ -1,93 +1,71 @@
 import requests
 from bs4 import BeautifulSoup
-import json
-from datetime import datetime, timedelta
+from datetime import datetime
 from apify import Actor
 
-url = "https://thealamo-keywest.com/wp-json/tribe/views/v2/html"
+def convert_time_format(time_str):
+    try:
+        if '@' in time_str:
+            time_str = time_str.split('@')[1].strip()  # Extract just the time part
+        time_obj = datetime.strptime(time_str, "%I:%M %p")
+    except ValueError as e:
+        print(f"Error parsing time: {e}")
+        return None
+    return time_obj.strftime("%H:%M:%S")
 
 current_date = datetime.now()
 
-current_month = current_date.strftime("%Y-%m")
+current_month_year = current_date.strftime("%Y-%m")
 
-previous_month_date = current_date.replace(day=1) - timedelta(days=1)
-previous_month = previous_month_date.strftime("%Y-%m")
-
-month_before_last_date = previous_month_date.replace(day=1) - timedelta(days=1)
-month_before_last = month_before_last_date.strftime("%Y-%m")
-
+url = f"https://thealamo-keywest.com/events/month/{current_month_year}/"
 
 headers = {
-    "Accept": "*/*",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
     "Accept-Encoding": "gzip, deflate, br, zstd",
-    "Accept-Language": "en-US,en;q=0.9,fr;q=0.8",
-    "Content-Length": "275", 
-    "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-    "Origin": "https://thealamo-keywest.com",
-    "Referer": "https://thealamo-keywest.com/events/month/2025-01/",
-    "Sec-CH-UA": "\"Not(A:Brand\";v=\"99\", \"Google Chrome\";v=\"133\", \"Chromium\";v=\"133\"",
-    "Sec-CH-UA-Mobile": "?0",
-    "Sec-CH-UA-Platform": "\"Windows\"",
-    "Sec-Fetch-Dest": "empty",
-    "Sec-Fetch-Mode": "cors",
+    "Accept-Language": "en-US,en;q=0.9",
+    "Cache-Control": "max-age=0",
+    "Referer": "https://thealamo-keywest.com/menu-full-menu/",
+    "sec-ch-ua": '"Chromium";v="134", "Not:A-Brand";v="24", "Google Chrome";v="134"',
+    "sec-ch-ua-mobile": "?0",
+    "sec-ch-ua-platform": "Windows",
+    "Sec-Fetch-Dest": "document",
+    "Sec-Fetch-Mode": "navigate",
     "Sec-Fetch-Site": "same-origin",
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36",
-    "X-Requested-With": "XMLHttpRequest"
+    "Sec-Fetch-User": "?1",
+    "Upgrade-Insecure-Requests": "1",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36"
 }
-
-cookies = {
-    "sbjs_migrations": "1418474375998%3D1",
-    "sbjs_first_add": "fd%3D2025-02-19%2017%3A47%3A57%7C%7C%7Cep%3Dhttps%3A%2F%2Fthealamo-keywest.com%2Fevents%2F%7C%7C%7Crf%3Dhttps%3A%2F%2Fwww.google.com%2F",
-    "sbjs_current": "typ%3Dorganic%7C%7C%7Csrc%3Dgoogle%7C%7C%7Cmdm%3Dorganic%7C%7C%7Ccmp%3D%28none%29%7C%7C%7Ccnt%3D%28none%29%7C%7C%7Ctrm%3D%28none%29%7C%7C%7Cid%3D%28none%29%7C%7C%7Cplt%3D%28none%29%7C%7C%7Cfmt%3D%28none%29%7C%7C%7Ctct%3D%28none%29",
-    "sbjs_first": "typ%3Dorganic%7C%7C%7Csrc%3Dgoogle%7C%7C%7Cmdm%3Dorganic%7C%7C%7Ccmp%3D%28none%29%7C%7C%7Ccnt%3D%28none%29%7C%7C%7Ctrm%3D%28none%29%7C%7C%7Cid%3D%28none%29%7C%7C%7Cplt%3D%28none%29%7C%7C%7Cfmt%3D%28none%29%7C%7C%7Ctct%3D%28none%29",
-    "sbjs_udata": "vst%3D1%7C%7C%7Cuip%3D%28none%29%7C%7C%7Cuag%3DMozilla%2F5.0%20%28Windows%20NT%2010.0%3B%20Win64%3B%20x64%29%20AppleWebKit%2F537.36%20%28KHTML%2C%20like%20Gecko%29%20Chrome%2F133.0.0.0%20Safari%2F537.36",
-    "sbjs_current_add": "fd%3D2025-02-19%2017%3A48%3A10%7C%7C%7Cep%3Dhttps%3A%2F%2Fthealamo-keywest.com%2Fevents%2F%7C%7C%7Crf%3Dhttps%3A%2F%2Fwww.google.com%2F",
-    "sbjs_session": "pgs%3D11%7C%7C%7Ccpg%3Dhttps%3A%2F%2Fthealamo-keywest.com%2Fevents%2Fmonth%2F"
-}
-
-data = {
-    "view_data[tribe-bar-date]": current_month,
-    "url": f"https://thealamo-keywest.com/events/month/{previous_month}/",
-    "prev_url": f"https://thealamo-keywest.com/events/month/{month_before_last}/",
-    "should_manage_url": "true",
-    "_tec_view_rest_nonce_primary": "3e0a7a3144",
-    "_tec_view_rest_nonce_secondary": ""
-}
-
-response = requests.post(url, headers=headers, cookies=cookies, data=data)
 
 async def main():
     async with Actor:
-        if response.status_code == 200:
-            soup = BeautifulSoup(response.text, "html.parser")
+        response = requests.get(url, headers=headers)
 
-            ld_json_script = soup.find("script", type="application/ld+json")
+        soup = BeautifulSoup(response.text, 'html.parser')
 
-            if ld_json_script:
-                ld_json_data = json.loads(ld_json_script.string)
+        day_cells = soup.find_all("div", class_="tribe-events-calendar-month__day-cell")
 
-                event_data = []
-                for event in ld_json_data:
-                    start_time = datetime.fromisoformat(event.get("startDate", "")).time().strftime('%H:%M:%S')  
-                    end_time = datetime.fromisoformat(event.get("endDate", "")).time().strftime('%H:%M:%S')  
-                    date = datetime.fromisoformat(event.get("startDate", "")).date().strftime('%Y-%m-%d')
+        for day_cell in day_cells:
+            date_tag = day_cell.find("time", class_="tribe-events-calendar-month__day-date-daynum")
+            event_date = date_tag['datetime'] if date_tag else None
 
-                    event_info = {
-                        "name": event.get("name", ""),
-                        "date": date,
+            events = day_cell.find_all("article", class_="tribe-events-calendar-month__calendar-event")
+            if not events:
+                print(f"Date: {event_date} - No events")
+                continue
+
+            for event in events:
+                title_link = event.find("a", class_="tribe-events-calendar-month__calendar-event-title-link")
+                event_name = title_link.text.strip() if title_link else None
+
+                times = event.find_all("time")
+                start_time = convert_time_format(times[0].text.strip()) if times and len(times) > 0 else None
+                end_time = convert_time_format(times[1].text.strip()) if times and len(times) > 1 else None
+
+                await Actor.push_data(
+                    {
+                        "name": event_name,
+                        "date": event_date,
                         "start_time": start_time,
                         "end_time": end_time,
                     }
-                    event_data.append(event_info)
-                for row in event_data:
-                    await Actor.push_data(
-                        {
-                            "name": row.get('name'),
-                            "date": row.get('date'),
-                            "start_time": row.get('start_time'),
-                            "end_time": row.get('end_time'),
-                        }
-                    )
-
-        else:
-            print("Failed to retrieve the page. Status code:", response.status_code)
+                )
