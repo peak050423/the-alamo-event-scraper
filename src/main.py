@@ -1,10 +1,21 @@
 import requests
 from bs4 import BeautifulSoup
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from apify import Actor
 
 url = "https://thealamo-keywest.com/wp-json/tribe/views/v2/html"
+
+current_date = datetime.now()
+
+current_month = current_date.strftime("%Y-%m")
+
+previous_month_date = current_date.replace(day=1) - timedelta(days=1)
+previous_month = previous_month_date.strftime("%Y-%m")
+
+month_before_last_date = previous_month_date.replace(day=1) - timedelta(days=1)
+month_before_last = month_before_last_date.strftime("%Y-%m")
+
 
 headers = {
     "Accept": "*/*",
@@ -35,9 +46,9 @@ cookies = {
 }
 
 data = {
-    "view_data[tribe-bar-date]": "2025-02",
-    "url": "https://thealamo-keywest.com/events/month/2025-01/",
-    "prev_url": "https://thealamo-keywest.com/events/month/2024-12/",
+    "view_data[tribe-bar-date]": current_month,
+    "url": f"https://thealamo-keywest.com/events/month/{previous_month}/",
+    "prev_url": f"https://thealamo-keywest.com/events/month/{month_before_last}/",
     "should_manage_url": "true",
     "_tec_view_rest_nonce_primary": "3e0a7a3144",
     "_tec_view_rest_nonce_secondary": ""
